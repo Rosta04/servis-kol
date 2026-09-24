@@ -1,1 +1,1007 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#1565C0">
+  <title>🚲 Servis Kol</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --primary:#1565C0;--primary-mid:#1976D2;--primary-light:#BBDEFB;
+      --accent:#FF6D00;--bg:#F0F4F8;--surface:#FFF;
+      --text:#1A1A2E;--text2:#5A6A7A;--divider:#E0E7EF;
+      --red:#D32F2F;--red-light:#FFEBEE;--green:#2E7D32;--green-light:#E8F5E9;
+      --yellow:#F57F17;--yellow-light:#FFFDE7;
+      --radius:14px;--shadow:0 2px 8px rgba(0,0,0,0.10);
+    }
+    html,body{height:100%;overflow:hidden;}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:var(--bg);color:var(--text);
+      display:flex;flex-direction:column;height:100dvh;
+    }
+
+    /* ── HEADER ── */
+    .app-bar{
+      background:var(--primary);color:#fff;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 16px;min-height:56px;flex-shrink:0;
+      box-shadow:0 2px 6px rgba(0,0,0,0.25);z-index:20;
+    }
+    .app-bar-left{display:flex;align-items:center;gap:10px;}
+    .app-bar-title{font-size:19px;font-weight:700;letter-spacing:.3px;}
+    .app-bar-sub{font-size:12px;opacity:.75;margin-top:1px;}
+    .app-bar-btn{
+      background:none;border:none;color:#fff;font-size:22px;
+      cursor:pointer;padding:6px;border-radius:8px;line-height:1;
+    }
+    .app-bar-btn:active{background:rgba(255,255,255,.2);}
+
+    /* ── CONTENT ── */
+    .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;}
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav{
+      display:flex;background:var(--surface);
+      border-top:1px solid var(--divider);
+      flex-shrink:0;z-index:20;
+      padding-bottom:env(safe-area-inset-bottom);
+    }
+    .nav-btn{
+      flex:1;display:flex;flex-direction:column;align-items:center;
+      gap:2px;padding:8px 4px;border:none;background:none;
+      color:var(--text2);font-size:10px;font-weight:500;cursor:pointer;
+      transition:color .15s;position:relative;
+    }
+    .nav-btn.active{color:var(--primary);}
+    .nav-btn .ni{font-size:22px;line-height:1;}
+    .nav-btn .badge{
+      position:absolute;top:4px;right:calc(50% - 18px);
+      background:var(--accent);color:#fff;border-radius:10px;
+      font-size:10px;font-weight:700;padding:0 5px;min-width:16px;
+      text-align:center;display:none;
+    }
+
+    /* ── PAGES ── */
+    .page{display:none;height:100%;}
+    .page.active{display:flex;flex-direction:column;}
+
+    /* ── SEARCH + FILTER ── */
+    .search-bar{
+      background:var(--surface);padding:10px 12px 6px;
+      border-bottom:1px solid var(--divider);flex-shrink:0;
+    }
+    .search-wrap{position:relative;}
+    .search-wrap .si{
+      position:absolute;left:12px;top:50%;transform:translateY(-50%);
+      font-size:16px;pointer-events:none;
+    }
+    .search-input{
+      width:100%;padding:9px 12px 9px 36px;
+      border:1.5px solid var(--divider);border-radius:20px;
+      font-size:15px;background:var(--bg);color:var(--text);
+      -webkit-appearance:none;
+    }
+    .search-input:focus{outline:none;border-color:var(--primary);background:#fff;}
+
+    .filter-scroll{
+      display:flex;gap:7px;overflow-x:auto;padding:8px 12px;
+      background:var(--surface);border-bottom:1px solid var(--divider);
+      flex-shrink:0;
+    }
+    .filter-scroll::-webkit-scrollbar{display:none;}
+    .chip{
+      white-space:nowrap;padding:5px 13px;border-radius:16px;
+      border:1.5px solid var(--divider);background:none;
+      font-size:13px;cursor:pointer;color:var(--text2);
+      transition:all .15s;flex-shrink:0;
+    }
+    .chip.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+    /* ── RECORDS LIST ── */
+    .rec-list{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px;}
+
+    .rec-card{
+      background:var(--surface);border-radius:var(--radius);
+      box-shadow:var(--shadow);overflow:hidden;
+    }
+    .rec-head{
+      display:flex;align-items:center;gap:12px;
+      padding:13px 14px;cursor:pointer;
+    }
+    .rec-head:active{background:var(--bg);}
+    .rec-icon{
+      width:42px;height:42px;border-radius:50%;
+      background:var(--primary-light);
+      display:flex;align-items:center;justify-content:center;
+      font-size:21px;flex-shrink:0;
+    }
+    .rec-mid{flex:1;min-width:0;}
+    .rec-typ{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .rec-kolo{font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .rec-right{text-align:right;flex-shrink:0;}
+    .rec-price{font-weight:700;color:var(--primary);font-size:15px;}
+    .rec-date{font-size:12px;color:var(--text2);}
+    .rec-chevron{font-size:12px;color:var(--text2);margin-left:4px;transition:transform .2s;}
+    .rec-chevron.open{transform:rotate(180deg);}
+
+    .rec-body{display:none;border-top:1px solid var(--divider);padding:12px 14px 14px;}
+    .rec-body.open{display:block;}
+    .drow{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;}
+    .dlbl{font-size:13px;color:var(--text2);}
+    .dval{font-size:13px;font-weight:500;text-align:right;max-width:65%;word-break:break-word;}
+    .rec-actions{display:flex;gap:8px;margin-top:12px;}
+    .btn{
+      flex:1;padding:9px 14px;border:none;border-radius:10px;
+      font-size:14px;font-weight:600;cursor:pointer;
+    }
+    .btn-edit{background:var(--primary-light);color:var(--primary);}
+    .btn-del{background:var(--red-light);color:var(--red);}
+
+    /* ── EMPTY / NO RESULTS ── */
+    .empty{
+      flex:1;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      text-align:center;padding:40px 24px;gap:10px;
+      color:var(--text2);
+    }
+    .empty .ei{font-size:60px;}
+    .empty h3{font-size:17px;color:var(--text);}
+    .empty p{font-size:14px;line-height:1.5;}
+
+    /* ── FORM ── */
+    .form-scroll{flex:1;overflow-y:auto;}
+    .form-wrap{padding:16px;display:flex;flex-direction:column;gap:14px;}
+    .form-title{font-size:17px;font-weight:700;color:var(--primary);padding-bottom:4px;}
+
+    .fg{display:flex;flex-direction:column;gap:5px;}
+    .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .flbl{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;}
+    .finput,.fselect,.ftarea{
+      width:100%;padding:12px 14px;
+      border:1.5px solid var(--divider);border-radius:10px;
+      font-size:16px;color:var(--text);background:var(--surface);
+      -webkit-appearance:none;font-family:inherit;
+    }
+    .finput:focus,.fselect:focus,.ftarea:focus{outline:none;border-color:var(--primary);}
+    .ftarea{min-height:72px;resize:vertical;line-height:1.5;}
+    .fselect{
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%235A6A7A' d='M5 7L0 2h10z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;
+    }
+    .btn-submit{
+      padding:15px;background:var(--primary);color:#fff;border:none;
+      border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;
+      box-shadow:0 3px 10px rgba(21,101,192,.35);width:100%;
+    }
+    .btn-submit:active{background:#0D47A1;}
+    .btn-secondary{
+      padding:13px;background:none;color:var(--text2);
+      border:1.5px solid var(--divider);border-radius:var(--radius);
+      font-size:15px;font-weight:600;cursor:pointer;width:100%;
+    }
+
+    /* ── STATS ── */
+    .stats-scroll{flex:1;overflow-y:auto;}
+    .stats-wrap{padding:14px;display:flex;flex-direction:column;gap:14px;}
+    .sc{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:15px;}
+    .sc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text2);margin-bottom:13px;}
+    .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .kpi{background:var(--bg);border-radius:10px;padding:12px;text-align:center;}
+    .kv{font-size:22px;font-weight:800;color:var(--primary);}
+    .kl{font-size:11px;color:var(--text2);margin-top:3px;}
+    .brow{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:10px 0;border-bottom:1px solid var(--divider);
+    }
+    .brow:last-child{border-bottom:none;}
+    .bname{font-weight:500;font-size:14px;}
+    .bbar-bg{height:4px;background:var(--divider);border-radius:2px;margin-top:5px;width:120px;}
+    .bbar{height:100%;background:var(--primary);border-radius:2px;}
+    .bright{text-align:right;}
+    .bcost{font-weight:700;color:var(--primary);font-size:14px;}
+    .bcnt{font-size:11px;color:var(--text2);}
+
+    /* ── SETTINGS ── */
+    .set-scroll{flex:1;overflow-y:auto;}
+    .set-wrap{padding:14px;display:flex;flex-direction:column;gap:20px;}
+    .set-sec{}
+    .set-sec-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
+    .list-item{
+      display:flex;align-items:center;justify-content:space-between;
+      background:var(--surface);border-radius:10px;padding:12px 14px;margin-bottom:6px;
+      box-shadow:var(--shadow);
+    }
+    .lname{font-size:14px;font-weight:500;}
+    .ldel{background:none;border:none;color:var(--red);font-size:22px;cursor:pointer;padding:2px 6px;line-height:1;}
+    .add-row{display:flex;gap:8px;margin-top:4px;}
+    .add-inp{
+      flex:1;padding:10px 13px;border:1.5px solid var(--divider);
+      border-radius:10px;font-size:15px;background:var(--surface);
+    }
+    .add-inp:focus{outline:none;border-color:var(--primary);}
+    .add-btn{
+      padding:10px 16px;background:var(--primary);color:#fff;
+      border:none;border-radius:10px;font-size:22px;cursor:pointer;
+    }
+    .wide-btn{
+      width:100%;padding:14px;border:none;border-radius:var(--radius);
+      font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;
+    }
+    .wb-green{background:var(--green);color:#fff;}
+    .wb-yellow{background:var(--yellow);color:#fff;}
+    .wb-red{background:var(--red-light);color:var(--red);border:1.5px solid #FFCDD2;}
+
+    /* ── TOAST ── */
+    .toast{
+      position:fixed;bottom:calc(72px + env(safe-area-inset-bottom));left:50%;
+      transform:translateX(-50%) translateY(16px);
+      background:#1A1A2E;color:#fff;padding:11px 22px;
+      border-radius:10px;font-size:14px;z-index:999;
+      opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    /* ── MODAL ── */
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.5);
+      z-index:500;display:none;align-items:center;
+      justify-content:center;padding:24px;
+    }
+    .overlay.open{display:flex;}
+    .modal{
+      background:#fff;border-radius:18px;padding:24px;
+      width:100%;max-width:340px;
+      box-shadow:0 8px 32px rgba(0,0,0,.2);
+    }
+    .modal h3{font-size:17px;font-weight:700;margin-bottom:8px;}
+    .modal p{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.5;}
+    .modal-btns{display:flex;gap:8px;}
+    .mbtn{flex:1;padding:12px;border-radius:10px;border:none;font-size:15px;font-weight:600;cursor:pointer;}
+    .mbtn-cancel{background:var(--bg);color:var(--text);}
+    .mbtn-ok{background:var(--red);color:#fff;}
+
+    /* ── FAB ── */
+    .fab{
+      position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));right:18px;
+      width:52px;height:52px;border-radius:50%;
+      background:var(--accent);color:#fff;border:none;
+      font-size:26px;cursor:pointer;z-index:50;
+      box-shadow:0 4px 14px rgba(255,109,0,.45);
+      display:flex;align-items:center;justify-content:center;
+      transition:transform .15s;
+    }
+    .fab:active{transform:scale(.92);}
+    .fab.hidden{display:none;}
+
+    /* ── BACKUP MODAL ── */
+    .bkp-icon{font-size:50px;text-align:center;line-height:1;margin-bottom:10px;}
+    .bkp-steps{
+      background:var(--bg);border-radius:10px;
+      padding:12px 14px;margin:12px 0 16px;
+      display:none;
+    }
+    .bkp-step{
+      display:flex;align-items:flex-start;gap:10px;
+      padding:6px 0;font-size:13px;line-height:1.5;
+      border-bottom:1px solid var(--divider);
+    }
+    .bkp-step:last-child{border-bottom:none;}
+    .bsn{
+      min-width:22px;height:22px;background:var(--primary);color:#fff;
+      border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;
+    }
+    .bkp-main-btn{
+      width:100%;padding:14px;border:none;border-radius:12px;
+      font-size:16px;font-weight:700;cursor:pointer;
+      background:var(--primary);color:#fff;
+      box-shadow:0 3px 10px rgba(21,101,192,.3);
+      transition:background .2s;
+      margin-bottom:8px;
+    }
+    .bkp-main-btn.done{background:var(--green);}
+    .bkp-row{display:flex;gap:8px;}
+    .bkp-skip{
+      flex:1;padding:12px;border:1.5px solid var(--divider);
+      border-radius:10px;background:none;font-size:14px;
+      font-weight:600;cursor:pointer;color:var(--text2);
+    }
+    .bkp-never{
+      flex:1;padding:12px;background:none;border:none;
+      font-size:12px;color:var(--text2);cursor:pointer;
+      text-decoration:underline;text-underline-offset:2px;
+    }
+
+    /* scrollbar thin */
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-thumb{background:var(--divider);border-radius:4px;}
+  </style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111827">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+</head>
+<body>
+
+<!-- APP BAR -->
+<header class="app-bar">
+  <div class="app-bar-left">
+    <span style="font-size:26px">🚲</span>
+    <div>
+      <div class="app-bar-title">Servis Kol</div>
+      <div class="app-bar-sub" id="hdr-sub">načítání…</div>
+    </div>
+  </div>
+  <button class="app-bar-btn" id="hdr-action" onclick="" style="display:none">✏️</button>
+</header>
+
+<!-- CONTENT -->
+<main class="content" id="main">
+
+  <!-- ── PAGE: ZÁZNAMY ── -->
+  <div class="page active" id="page-records">
+    <div class="search-bar">
+      <div class="search-wrap">
+        <span class="si">🔍</span>
+        <input class="search-input" type="search" id="search" placeholder="Hledat záznamy…"
+               oninput="renderRecords()">
+      </div>
+    </div>
+    <div class="filter-scroll" id="filter-bar"></div>
+    <div class="rec-list" id="rec-list"></div>
+  </div>
+
+  <!-- ── PAGE: PŘIDAT / UPRAVIT ── -->
+  <div class="page" id="page-add">
+    <div class="form-scroll">
+      <div class="form-wrap">
+        <div class="form-title" id="form-title">➕ Nový záznam</div>
+        <input type="hidden" id="eid">
+
+        <div class="fg">
+          <label class="flbl">Datum *</label>
+          <input class="finput" type="date" id="f-datum">
+        </div>
+
+        <div class="fg">
+          <label class="flbl">Kolo *</label>
+          <select class="fselect" id="f-kolo" onchange="onSelectCustom('f-kolo','bikes')"></select>
+        </div>
+
+        <div class="fg">
+          <label class="flbl">Typ úkonu *</label>
+          <select class="fselect" id="f-typ" onchange="onSelectCustom('f-typ','serviceTypes')"></select>
+        </div>
+
+        <div class="fg">
+          <label class="flbl">Popis / poznámka</label>
+          <textarea class="ftarea" id="f-popis" placeholder="Volitelné…"></textarea>
+        </div>
+
+        <div class="fg-row">
+          <div class="fg">
+            <label class="flbl">Nájezd (km)</label>
+            <input class="finput" type="number" id="f-najezd" placeholder="0" min="0">
+          </div>
+          <div class="fg">
+            <label class="flbl">Cena (Kč)</label>
+            <input class="finput" type="number" id="f-cena" placeholder="0" min="0">
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="flbl">Provedl</label>
+          <input class="finput" type="text" id="f-provedl" placeholder="Servis / vlastní">
+        </div>
+
+        <button class="btn-submit" onclick="submitForm()">💾 Uložit záznam</button>
+        <button class="btn-secondary" id="btn-cancel" style="display:none" onclick="cancelEdit()">Zrušit úpravu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: STATISTIKY ── -->
+  <div class="page" id="page-stats">
+    <div class="stats-scroll">
+      <div class="stats-wrap" id="stats-wrap"></div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: NASTAVENÍ ── -->
+  <div class="page" id="page-settings">
+    <div class="set-scroll">
+      <div class="set-wrap" id="set-wrap"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FAB (add record shortcut from records page) -->
+<button class="fab" id="fab" onclick="switchTab('add')">+</button>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-records" onclick="switchTab('records')">
+    <span class="ni">📋</span><span>Záznamy</span>
+  </button>
+  <button class="nav-btn" id="nav-add" onclick="switchTab('add')">
+    <span class="ni">➕</span><span>Přidat</span>
+  </button>
+  <button class="nav-btn" id="nav-stats" onclick="switchTab('stats')">
+    <span class="ni">📊</span><span>Statistiky</span>
+  </button>
+  <button class="nav-btn" id="nav-settings" onclick="switchTab('settings')">
+    <span class="ni">⚙️</span><span>Nastavení</span>
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- DELETE MODAL -->
+<div class="overlay" id="del-overlay">
+  <div class="modal">
+    <h3>Smazat záznam?</h3>
+    <p>Tuto akci nelze vrátit zpět.</p>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeModal()">Zrušit</button>
+      <button class="mbtn mbtn-ok" onclick="doDelete()">Smazat</button>
+    </div>
+  </div>
+</div>
+
+<!-- BACKUP / iCLOUD MODAL -->
+<div class="overlay" id="bkp-overlay">
+  <div class="modal">
+    <div class="bkp-icon">☁️</div>
+    <h3 style="text-align:center;margin-bottom:8px">Zálohovat do iCloud?</h3>
+    <p>Záznam uložen. Stáhněte zálohu a uložte ji do <strong>iCloud Drive</strong> — data budou v bezpečí i po smazání Safari.</p>
+    <div class="bkp-steps" id="bkp-steps">
+      <div class="bkp-step"><span class="bsn">1</span><span>Klepněte na stažený soubor v liště Safari dole</span></div>
+      <div class="bkp-step"><span class="bsn">2</span><span>Klepněte na ikonu <strong>Sdílet ⬆️</strong></span></div>
+      <div class="bkp-step"><span class="bsn">3</span><span>Vyberte <strong>Uložit do Souborů</strong></span></div>
+      <div class="bkp-step"><span class="bsn">4</span><span>Zvolte <strong>iCloud Drive</strong> a potvrďte</span></div>
+    </div>
+    <button class="bkp-main-btn" id="bkp-btn" onclick="doBackup()">☁️ Stáhnout zálohu</button>
+    <div class="bkp-row">
+      <button class="bkp-skip" onclick="closeBackupModal(false)">Přeskočit</button>
+      <button class="bkp-never" onclick="closeBackupModal(true)">Víc nezobrazovat</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLEAR ALL MODAL -->
+<div class="overlay" id="clr-overlay">
+  <div class="modal">
+    <h3>Smazat vše?</h3>
+    <p>Smažou se <strong>všechny</strong> servisní záznamy. Kola a typy úkonů zůstanou. Opravdu pokračovat?</p>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="document.getElementById('clr-overlay').classList.remove('open')">Zrušit</button>
+      <button class="mbtn mbtn-ok" onclick="doClearAll()">Smazat vše</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════
+   DATA
+════════════════════════════════════ */
+const DEFAULT_BIKES = [
+  'Specialized Allez','Specialized Roubaix','Specialized Epic HT',
+  'Specialized Epic Full','Specialized HT'
+];
+const DEFAULT_TYPES = [
+  'Výměna řetězu','Výměna kazety','Výměna brzdových destiček',
+  'Odvzdušnění brzd','Výměna plášťů','Výměna duše',
+  'Seřízení přehazovačky','Seřízení přesmykače','Výměna bowdenů a lanek',
+  'Mazání řetězu','Výměna brzdových kotoučů','Kontrola/dotažení šroubů',
+  'Servis vidlice/tlumiče','Výměna pedálů','Centrování kol',
+  'Výměna ložisek','Jiné'
+];
+const SAMPLE = {
+  id:'sample-1',datum:'2026-01-15',kolo:'Specialized Allez',
+  typ:'Výměna řetězu',popis:'Řetěz Shimano 105, opotřebení 0.75%',
+  najezd:3200,cena:450,provedl:'Servis Kolo s.r.o.'
+};
+
+let D = {records:[],bikes:[...DEFAULT_BIKES],serviceTypes:[...DEFAULT_TYPES]};
+let activeTab = 'records';
+let activeFilter = 'all';
+let pendingDeleteId = null;
+
+/* ── storage ── */
+function load(){
+  try{
+    const s = localStorage.getItem('sk_app');
+    if(s){ D = JSON.parse(s); }
+    else{ D.records = [SAMPLE]; save(); }
+  }catch(e){ console.error(e); }
+}
+function save(){ localStorage.setItem('sk_app',JSON.stringify(D)); }
+
+/* ── uid ── */
+function uid(){
+  return (Date.now().toString(36)+Math.random().toString(36).slice(2,7)).toUpperCase();
+}
+
+/* ── date format ── */
+function fmtDate(s){
+  if(!s) return '—';
+  try{
+    const d=new Date(s+'T12:00:00');
+    return d.toLocaleDateString('cs-CZ',{day:'numeric',month:'short',year:'numeric'});
+  }catch{return s;}
+}
+
+/* ── bike emoji ── */
+function bikeEmoji(k){
+  if(!k) return '🚲';
+  const lk=k.toLowerCase();
+  if(lk.includes('allez')||lk.includes('roubaix')||lk.includes('road')) return '🚴';
+  if(lk.includes('epic')||lk.includes('mtb')||lk.includes('ht')||lk.includes('mountain')) return '🚵';
+  return '🚲';
+}
+
+/* ════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════ */
+function switchTab(tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.getElementById('nav-'+tab).classList.add('active');
+  activeTab = tab;
+  document.getElementById('main').scrollTop = 0;
+
+  const fab = document.getElementById('fab');
+  fab.classList.toggle('hidden', tab !== 'records');
+
+  if(tab==='records'){ renderRecords(); updateHeader(); }
+  if(tab==='add'){ initForm(); updateHeader(); }
+  if(tab==='stats'){ renderStats(); updateHeader(); }
+  if(tab==='settings'){ renderSettings(); updateHeader(); }
+}
+
+function updateHeader(){
+  const sub = document.getElementById('hdr-sub');
+  const ha  = document.getElementById('hdr-action');
+  ha.style.display='none';
+  if(activeTab==='records'){
+    const n=D.records.length;
+    sub.textContent = n===0?'žádné záznamy':`${n} ${pluralZaznam(n)}`;
+  } else if(activeTab==='add'){
+    sub.textContent = document.getElementById('eid').value ? 'úprava záznamu' : 'nový záznam';
+  } else if(activeTab==='stats'){
+    sub.textContent = 'přehled';
+  } else if(activeTab==='settings'){
+    sub.textContent = 'nastavení';
+  }
+}
+
+function pluralZaznam(n){
+  if(n===1) return 'záznam';
+  if(n>=2&&n<=4) return 'záznamy';
+  return 'záznamů';
+}
+
+/* ════════════════════════════════════
+   RECORDS PAGE
+════════════════════════════════════ */
+function renderRecords(){
+  const q = (document.getElementById('search').value||'').toLowerCase().trim();
+  let recs = [...D.records];
+
+  if(activeFilter!=='all') recs=recs.filter(r=>r.kolo===activeFilter);
+  if(q) recs=recs.filter(r=>
+    (r.typ||'').toLowerCase().includes(q)||
+    (r.kolo||'').toLowerCase().includes(q)||
+    (r.popis||'').toLowerCase().includes(q)||
+    (r.provedl||'').toLowerCase().includes(q)
+  );
+  recs.sort((a,b)=>(b.datum||'').localeCompare(a.datum||''));
+
+  renderChips();
+
+  const list = document.getElementById('rec-list');
+  if(recs.length===0){
+    const noData = !q && activeFilter==='all';
+    list.innerHTML=`<div class="empty">
+      <div class="ei">${noData?'🚲':'🔍'}</div>
+      <h3>${noData?'Zatím žádné záznamy':'Nic nenalezeno'}</h3>
+      <p>${noData?'Přidejte první servisní záznam\nklepnutím na ➕':'Zkuste jiný filtr nebo hledaný výraz.'}</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = recs.map(r=>cardHTML(r)).join('');
+  updateHeader();
+}
+
+function cardHTML(r){
+  const price = r.cena ? r.cena.toLocaleString('cs-CZ')+' Kč' : '—';
+  const najezd= r.najezd ? r.najezd.toLocaleString('cs-CZ')+' km' : '—';
+  return `
+  <div class="rec-card" id="rc-${r.id}">
+    <div class="rec-head" onclick="toggleCard('${r.id}')">
+      <div class="rec-icon">${bikeEmoji(r.kolo)}</div>
+      <div class="rec-mid">
+        <div class="rec-typ">${esc(r.typ||'—')}</div>
+        <div class="rec-kolo">${esc(r.kolo||'—')}</div>
+      </div>
+      <div class="rec-right">
+        <div class="rec-price">${price}</div>
+        <div class="rec-date">${fmtDate(r.datum)}</div>
+      </div>
+      <span class="rec-chevron" id="chev-${r.id}">▼</span>
+    </div>
+    <div class="rec-body" id="rb-${r.id}">
+      ${r.popis?`<div class="drow"><span class="dlbl">Popis</span><span class="dval">${esc(r.popis)}</span></div>`:''}
+      <div class="drow"><span class="dlbl">Nájezd</span><span class="dval">${najezd}</span></div>
+      <div class="drow"><span class="dlbl">Cena</span><span class="dval">${price}</span></div>
+      ${r.provedl?`<div class="drow"><span class="dlbl">Provedl</span><span class="dval">${esc(r.provedl)}</span></div>`:''}
+      <div class="drow"><span class="dlbl">Datum</span><span class="dval">${fmtDate(r.datum)}</span></div>
+      <div class="rec-actions">
+        <button class="btn btn-edit" onclick="editRecord('${r.id}')">✏️ Upravit</button>
+        <button class="btn btn-del"  onclick="askDelete('${r.id}')">🗑️ Smazat</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleCard(id){
+  const body = document.getElementById('rb-'+id);
+  const chev = document.getElementById('chev-'+id);
+  const open = body.classList.toggle('open');
+  chev.classList.toggle('open',open);
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ── filter chips ── */
+function renderChips(){
+  const usedBikes=[...new Set(D.records.map(r=>r.kolo).filter(Boolean))].sort();
+  let h=`<button class="chip${activeFilter==='all'?' active':''}" onclick="setFilter('all')">Vše (${D.records.length})</button>`;
+  usedBikes.forEach(b=>{
+    const cnt=D.records.filter(r=>r.kolo===b).length;
+    const short=b.replace('Specialized ','').replace('Trek ','').replace('Giant ','');
+    h+=`<button class="chip${activeFilter===b?' active':''}" onclick="setFilter(${JSON.stringify(b)})">${esc(short)} (${cnt})</button>`;
+  });
+  document.getElementById('filter-bar').innerHTML=h;
+}
+
+function setFilter(f){ activeFilter=f; renderRecords(); }
+
+/* ════════════════════════════════════
+   FORM
+════════════════════════════════════ */
+function initForm(){
+  // bikes
+  const ks=document.getElementById('f-kolo');
+  const cur=ks.value;
+  ks.innerHTML='<option value="">— Vyberte kolo —</option>'+
+    D.bikes.map(b=>`<option value="${esc(b)}">${esc(b)}</option>`).join('')+
+    '<option value="__new__">+ Přidat nové kolo…</option>';
+  if(cur && [...ks.options].some(o=>o.value===cur)) ks.value=cur;
+
+  // types
+  const ts=document.getElementById('f-typ');
+  const curt=ts.value;
+  ts.innerHTML='<option value="">— Vyberte typ úkonu —</option>'+
+    D.serviceTypes.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')+
+    '<option value="__new__">+ Přidat vlastní typ…</option>';
+  if(curt && [...ts.options].some(o=>o.value===curt)) ts.value=curt;
+
+  // default today
+  if(!document.getElementById('f-datum').value){
+    document.getElementById('f-datum').value=todayISO();
+  }
+}
+
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+function onSelectCustom(selId,col){
+  const sel=document.getElementById(selId);
+  if(sel.value!=='__new__') return;
+  const label=col==='bikes'?'Název kola':'Typ úkonu';
+  const name=(prompt(label+':')||'').trim();
+  if(name){
+    if(!D[col].includes(name)){ D[col].push(name); save(); }
+    initForm();
+    document.getElementById(selId).value=name;
+  } else {
+    sel.value='';
+  }
+}
+
+function submitForm(){
+  const datum=document.getElementById('f-datum').value;
+  const kolo =document.getElementById('f-kolo').value;
+  const typ  =document.getElementById('f-typ').value;
+  if(!datum){ toast('⚠️ Zadejte datum'); return; }
+  if(!kolo||kolo==='__new__'){ toast('⚠️ Vyberte kolo'); return; }
+  if(!typ||typ==='__new__'){ toast('⚠️ Vyberte typ úkonu'); return; }
+
+  const editId=document.getElementById('eid').value;
+  const rec={
+    id:editId||uid(),
+    datum,kolo,typ,
+    popis:document.getElementById('f-popis').value.trim(),
+    najezd:parseInt(document.getElementById('f-najezd').value)||0,
+    cena  :parseInt(document.getElementById('f-cena').value)||0,
+    provedl:document.getElementById('f-provedl').value.trim()
+  };
+
+  if(editId){
+    const i=D.records.findIndex(r=>r.id===editId);
+    if(i>=0) D.records[i]=rec;
+    toast('✅ Záznam upraven');
+  } else {
+    D.records.push(rec);
+    toast('✅ Záznam přidán');
+  }
+  save();
+  clearForm();
+  switchTab('records');
+  if(!localStorage.getItem('sk_nobkp')) setTimeout(offerBackup, 350);
+}
+
+function clearForm(){
+  document.getElementById('eid').value='';
+  document.getElementById('f-datum').value=todayISO();
+  document.getElementById('f-kolo').value='';
+  document.getElementById('f-typ').value='';
+  document.getElementById('f-popis').value='';
+  document.getElementById('f-najezd').value='';
+  document.getElementById('f-cena').value='';
+  document.getElementById('f-provedl').value='';
+  document.getElementById('form-title').textContent='➕ Nový záznam';
+  document.getElementById('btn-cancel').style.display='none';
+}
+
+function cancelEdit(){ clearForm(); switchTab('records'); }
+
+function editRecord(id){
+  const r=D.records.find(r=>r.id===id);
+  if(!r) return;
+  initForm();
+  document.getElementById('eid').value=r.id;
+  document.getElementById('f-datum').value=r.datum||'';
+  document.getElementById('f-kolo').value=r.kolo||'';
+  document.getElementById('f-typ').value=r.typ||'';
+  document.getElementById('f-popis').value=r.popis||'';
+  document.getElementById('f-najezd').value=r.najezd||'';
+  document.getElementById('f-cena').value=r.cena||'';
+  document.getElementById('f-provedl').value=r.provedl||'';
+  document.getElementById('form-title').textContent='✏️ Upravit záznam';
+  document.getElementById('btn-cancel').style.display='block';
+  switchTab('add');
+  document.getElementById('main').scrollTop=0;
+}
+
+/* ════════════════════════════════════
+   DELETE
+════════════════════════════════════ */
+function askDelete(id){ pendingDeleteId=id; document.getElementById('del-overlay').classList.add('open'); }
+function closeModal(){ pendingDeleteId=null; document.getElementById('del-overlay').classList.remove('open'); }
+function doDelete(){
+  if(!pendingDeleteId) return;
+  D.records=D.records.filter(r=>r.id!==pendingDeleteId);
+  save(); closeModal(); renderRecords(); toast('🗑️ Záznam smazán');
+}
+function doClearAll(){
+  D.records=[];
+  save();
+  document.getElementById('clr-overlay').classList.remove('open');
+  renderRecords(); updateHeader(); toast('🗑️ Všechna data smazána');
+  switchTab('records');
+}
+
+/* ════════════════════════════════════
+   STATISTICS
+════════════════════════════════════ */
+function renderStats(){
+  const wrap=document.getElementById('stats-wrap');
+  if(D.records.length===0){
+    wrap.innerHTML=`<div class="empty"><div class="ei">📊</div><h3>Zatím žádná data</h3><p>Přidejte servisní záznamy.</p></div>`;
+    return;
+  }
+  const recs=D.records;
+  const total=recs.reduce((s,r)=>s+(r.cena||0),0);
+  const avg=Math.round(total/recs.length);
+  const yr=new Date().getFullYear();
+  const yrCost=recs.filter(r=>(r.datum||'').startsWith(yr)).reduce((s,r)=>s+(r.cena||0),0);
+  const yrCnt=recs.filter(r=>(r.datum||'').startsWith(yr)).length;
+
+  // per bike
+  const bm={};
+  recs.forEach(r=>{ if(!r.kolo) return; if(!bm[r.kolo]) bm[r.kolo]={c:0,n:0}; bm[r.kolo].c+=r.cena||0; bm[r.kolo].n++; });
+  const bs=Object.entries(bm).sort((a,b)=>b[1].c-a[1].c);
+  const maxC=bs.length?bs[0][1].c:1;
+
+  // per type
+  const tm={};
+  recs.forEach(r=>{ if(r.typ) tm[r.typ]=(tm[r.typ]||0)+1; });
+  const ts=Object.entries(tm).sort((a,b)=>b[1]-a[1]).slice(0,6);
+
+  // last service
+  const last=[...recs].sort((a,b)=>(b.datum||'').localeCompare(a.datum||''))[0];
+
+  wrap.innerHTML=`
+    <div class="sc">
+      <div class="sc-title">Celkový přehled</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kv">${recs.length}</div><div class="kl">Servisů celkem</div></div>
+        <div class="kpi"><div class="kv">${total.toLocaleString('cs-CZ')} Kč</div><div class="kl">Celkové náklady</div></div>
+        <div class="kpi"><div class="kv">${avg.toLocaleString('cs-CZ')} Kč</div><div class="kl">Průměrná cena</div></div>
+        <div class="kpi"><div class="kv">${yrCost.toLocaleString('cs-CZ')} Kč</div><div class="kl">Letos (${yr}) · ${yrCnt}×</div></div>
+      </div>
+    </div>
+
+    ${bs.length?`
+    <div class="sc">
+      <div class="sc-title">Náklady na kolo</div>
+      ${bs.map(([b,v])=>`
+        <div class="brow">
+          <div>
+            <div class="bname">${esc(b)}</div>
+            <div class="bbar-bg"><div class="bbar" style="width:${Math.round(v.c/maxC*100)}%"></div></div>
+          </div>
+          <div class="bright">
+            <div class="bcost">${v.c.toLocaleString('cs-CZ')} Kč</div>
+            <div class="bcnt">${v.n} ${v.n===1?'servis':v.n<=4?'servisy':'servisů'}</div>
+          </div>
+        </div>`).join('')}
+    </div>`:''}
+
+    ${ts.length?`
+    <div class="sc">
+      <div class="sc-title">Nejčastější úkony</div>
+      ${ts.map(([t,n])=>`
+        <div class="brow">
+          <div class="bname">${esc(t)}</div>
+          <div class="bcost">${n}×</div>
+        </div>`).join('')}
+    </div>`:''}
+
+    <div class="sc">
+      <div class="sc-title">Poslední servis</div>
+      <div class="drow"><span class="dlbl">Datum</span><span class="dval">${fmtDate(last.datum)}</span></div>
+      <div class="drow"><span class="dlbl">Kolo</span><span class="dval">${esc(last.kolo||'—')}</span></div>
+      <div class="drow"><span class="dlbl">Úkon</span><span class="dval">${esc(last.typ||'—')}</span></div>
+      <div class="drow"><span class="dlbl">Cena</span><span class="dval">${last.cena?last.cena.toLocaleString('cs-CZ')+' Kč':'—'}</span></div>
+    </div>
+  `;
+}
+
+/* ════════════════════════════════════
+   SETTINGS
+════════════════════════════════════ */
+function renderSettings(){
+  const w=document.getElementById('set-wrap');
+  w.innerHTML=`
+    <div class="set-sec">
+      <div class="set-sec-title">🚲 Moje kola</div>
+      ${D.bikes.map(b=>`
+        <div class="list-item">
+          <span class="lname">${esc(b)}</span>
+          <button class="ldel" onclick="delBike(${JSON.stringify(b)})">×</button>
+        </div>`).join('')}
+      <div class="add-row">
+        <input class="add-inp" id="nb" placeholder="Název nového kola…" onkeydown="if(event.key==='Enter')addBike()">
+        <button class="add-btn" onclick="addBike()">+</button>
+      </div>
+    </div>
+
+    <div class="set-sec">
+      <div class="set-sec-title">🔧 Typy úkonů</div>
+      ${D.serviceTypes.map(t=>`
+        <div class="list-item">
+          <span class="lname">${esc(t)}</span>
+          <button class="ldel" onclick="delType(${JSON.stringify(t)})">×</button>
+        </div>`).join('')}
+      <div class="add-row">
+        <input class="add-inp" id="nt" placeholder="Nový typ úkonu…" onkeydown="if(event.key==='Enter')addType()">
+        <button class="add-btn" onclick="addType()">+</button>
+      </div>
+    </div>
+
+    <div class="set-sec">
+      <div class="set-sec-title">☁️ iCloud záloha</div>
+      <div style="background:var(--primary-light);border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:13px;color:var(--primary);line-height:1.6">
+        Stáhni zálohu (JSON soubor) a ulož ji do <strong>iCloud Drive</strong> přes Sdílet&nbsp;⬆️ → Uložit do Souborů. Pro obnovení dat použij tlačítko importu níže.
+      </div>
+      <button class="wide-btn" style="background:var(--primary);color:#fff;margin-bottom:8px" onclick="offerBackup()">☁️ Zálohovat nyní do iCloud</button>
+      <label class="wide-btn" style="display:block;text-align:center;cursor:pointer;margin-bottom:8px;background:var(--green-light);color:var(--green);border:none;border-radius:var(--radius);padding:14px;font-size:15px;font-weight:600">
+        📥 Obnovit ze zálohy (JSON)
+        <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+      </label>
+      ${localStorage.getItem('sk_nobkp')?`
+      <button class="wide-btn" style="background:var(--bg);color:var(--text2);border:1.5px solid var(--divider);margin-bottom:8px" onclick="localStorage.removeItem('sk_nobkp');renderSettings();toast('✅ Upozornění obnoveno')">
+        🔔 Znovu zobrazovat nabídku zálohy
+      </button>`:''}
+    </div>
+
+    <div class="set-sec">
+      <div class="set-sec-title">📁 Export / Import CSV</div>
+      <button class="wide-btn wb-green" onclick="exportCSV()">📤 Exportovat záznamy jako CSV</button>
+      <label class="wide-btn wb-yellow" style="display:block;text-align:center;cursor:pointer;margin-bottom:0">
+        📥 Importovat záznamy z CSV
+        <input type="file" accept=".csv" style="display:none" onchange="importCSV(event)">
+      </label>
+    </div>
+
+    <div class="set-sec">
+      <div class="set-sec-title">⚠️ Nebezpečná zóna</div>
+      <button class="wide-btn wb-red" onclick="document.getElementById('clr-overlay').classList.add('open')">
+        🗑️ Smazat všechny záznamy
+      </button>
+    </div>
+
+    <div style="text-align:center;color:var(--text2);font-size:12px;padding-bottom:4px">
+      Servis Kol • data uložena v prohlížeči
+    </div>
+  `;
+}
+
+function addBike(){
+  const n=(document.getElementById('nb').value||'').trim();
+  if(!n) return;
+  if(D.bikes.includes(n)){ toast('⚠️ Kolo již existuje'); return; }
+  D.bikes.push(n); save(); renderSettings(); toast('✅ Kolo přidáno');
+}
+function delBike(b){
+  const used=D.records.filter(r=>r.kolo===b).length;
+  if(used&&!confirm(`Kolo "${b}" je použito v ${used} záznamech. Smazat?`)) return;
+  D.bikes=D.bikes.filter(x=>x!==b); save(); renderSettings(); toast('Kolo odebráno');
+}
+function addType(){
+  const n=(document.getElementById('nt').value||'').trim();
+  if(!n) return;
+  if(D.serviceTypes.includes(n)){ toast('⚠️ Typ již existuje'); return; }
+  D.serviceTypes.push(n); save(); renderSettings(); toast('✅ Typ přidán');
+}
+function delType(t){
+  D.serviceTypes=D.serviceTypes.filter(x=>x!==t); save(); renderSettings(); toast('Typ odebrán');
+}
+
+/* ════════════════════════════════════
+   BACKUP / iCLOUD
+════════════════════════════════════ */
+function offerBackup(){
+  const ov=document.getElementById('bkp-overlay');
+  const btn=document.getElementById('bkp-btn');
+  const steps=document.getElementById('bkp-steps');
+  btn.textContent='☁️ Stáhnout zálohu';
+  btn.className='bkp-main-btn';
+  steps.style.display='none';
+  ov.classList.add('open');
+}
+
+function doBackup(){
+  const ts=todayISO();
+  const json=JSON.stringify(D,null,2);
+  const blob=new Blob([json],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`servis_kol_zaloha_${ts}.json`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  // Show iOS instructions
+  document.getElementById('bkp-steps').style.display='block';
+  const btn=document.getElementById('bkp-btn');
+  btn.textContent='✅ Staženo — postupuj dle kroků níže';
+  btn.className='bkp-main-btn done';
+}
+
+function closeBackupModal(never){
+  if(never) localStorage.setItem('sk_nobkp','1');
+  document.getElementById('bkp-overlay').classList.remove('open');
+}
