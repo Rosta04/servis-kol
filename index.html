@@ -1005,3 +1005,62 @@ function closeBackupModal(never){
   if(never) localStorage.setItem('sk_nobkp','1');
   document.getElementById('bkp-overlay').classList.remove('open');
 }
+/* ════════════════════════════════════
+   EXPORT / IMPORT CSV
+════════════════════════════════════ */
+function exportCSV(){
+  if(!D.records.length){ toast('⚠️ Žádná data k exportu'); return; }
+  const hdr=['Datum','Kolo','Typ úkonu','Popis / poznámka','Nájezd (km)','Cena (Kč)','Provedl'];
+  const rows=[...D.records].sort((a,b)=>(b.datum||'').localeCompare(a.datum||''))
+    .map(r=>[r.datum,r.kolo,r.typ,r.popis,r.najezd||'',r.cena||'',r.provedl]
+      .map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(';'));
+  const csv='\uFEFF'+[hdr.join(';'),...rows].join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download='servis_kol_'+todayISO()+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000); toast('📤 CSV připraveno');
+}
+function importCSV(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{ try{
+    const lines=ev.target.result.replace(/^\uFEFF/,'').split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length<2){toast('⚠️ Prázdný soubor');return;}
+    let imported=0;
+    for(let i=1;i<lines.length;i++){ const cols=parseCSV(lines[i]); if(cols.length<2)continue;
+      D.records.push({id:uid(),datum:cols[0]||'',kolo:cols[1]||'',typ:cols[2]||'',popis:cols[3]||'',najezd:parseInt(cols[4])||0,cena:parseInt(cols[5])||0,provedl:cols[6]||''}); imported++;
+    }
+    save(); toast('✅ Importováno '+imported+' záznamů'); renderRecords();
+  }catch(err){toast('⚠️ Chyba při importu');}};
+  reader.readAsText(file,'UTF-8'); e.target.value='';
+}
+function importJSON(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{try{
+    const obj=JSON.parse(ev.target.result);
+    if(!obj||!Array.isArray(obj.records)){toast('⚠️ Neplatný soubor zálohy');return;}
+    if(!confirm('Záloha obsahuje '+obj.records.length+' záznamů. Nahradit stávající data?'))return;
+    D.records=obj.records; if(Array.isArray(obj.bikes))D.bikes=obj.bikes; if(Array.isArray(obj.serviceTypes))D.serviceTypes=obj.serviceTypes;
+    save(); renderRecords(); switchTab('records'); toast('✅ Obnoveno '+D.records.length+' záznamů ze zálohy');
+  }catch(err){toast('⚠️ Chyba při načítání zálohy');}};
+  reader.readAsText(file,'UTF-8'); e.target.value='';
+}
+function parseCSV(line){
+  const res=[]; let cur=''; let q=false;
+  for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(q&&line[i+1]==='"'){cur+='"';i++;}else q=!q;}else if((c===';'||c===',')&&!q){res.push(cur.trim());cur='';}else cur+=c;}
+  res.push(cur.trim());return res;
+}
+let _tt=null;
+function toast(msg){const el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2500);}
+
+/* ════════════════════════════════════
+   INIT
+════════════════════════════════════ */
+load();
+initForm();
+renderRecords();
+updateHeader();
+</script>
+</body>
+</html>
